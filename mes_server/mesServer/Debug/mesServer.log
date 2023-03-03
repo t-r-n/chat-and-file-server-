@@ -4,5 +4,5 @@
   - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
   Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
 E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
-E:\trn_project\fin_server_pro\mes_server\mesServer\clint.cpp(227,39): warning C4018: “<”: 有符号/无符号不匹配
-  mesServer.vcxproj -> E:\trn_project\fin_server_pro\mes_server\mesServer\Debug\mesServer.exe
+E:\trn_project\fin_server\mes_server\mesServer\clint.cpp(223,39): warning C4018: “<”: 有符号/无符号不匹配
+  mesServer.vcxproj -> E:\trn_project\fin_server\mes_server\mesServer\Debug\mesServer.exe

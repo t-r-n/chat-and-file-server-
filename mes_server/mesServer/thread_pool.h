@@ -2,7 +2,6 @@
 #ifndef ILOVERS_THREAD_POOL_H
 #define ILOVERS_THREAD_POOL_H
 
-
 #if 0
 //用法
 int main()
@@ -97,12 +96,10 @@ public:
         if (stop.load()) {    // stop == true ??
             throw std::runtime_error("task executor have closed commit.");
         }
-        //std::cout << __LINE__ << std::endl;
         using ResType = decltype(f(args...));    // typename std::result_of<F(Args...)>::type, 函数 f 的返回值类型
         auto task = std::make_shared<std::packaged_task<ResType()>>(//还有一个作用把任何形式的函数都包装成了一个无返回值无参数的函数，便于统一返回std::function<void()>
             std::bind(std::forward<F>(f), std::forward<Args>(args)...)//注意和bind的结合使用
-            );    // wtf !
-        //std::cout << __LINE__ << std::endl;
+            ); 
         {    // 添加任务到队列
             std::lock_guard<std::mutex> lock{ m_task };
             tasks.emplace([task]() {   // push(Task{...}),,还有一个作用把任何形式的函数都包装成了一个无返回值无参数的函数，便于统一返回std::function<void()>
@@ -115,31 +112,11 @@ public:
         std::future<ResType> future = task->get_future();//异步的等待packaged_task包装过的task的返回值
         return future;
     }
-    //template<typename xClass, typename xReturn, typename...xParam>//用这个就可以特化成员函数版本了
-    //auto commit(xReturn(xClass::* pfn)(xParam...), xClass* pThis, xParam...lp) {
-    //    return commit(std::bind(pfn, pThis, lp...));
-    //}
-    //template<class F, class... Args>//静态类成员函数的特化版本
-    //auto commit(F*pThis,void(F::* pfn)(Args...), Args&&... args) ->std::future<decltype(f(args...))> {//用了右值引用不拷贝传进来的参数，给传进来的参数续命
-    //    if (stop.load()) {    // stop == true ??
-    //        throw std::runtime_error("task executor have closed commit.");
-    //    }
+    template<typename xClass, typename xReturn, typename...xParam>//用这个就可以特化成员函数版本了
+    auto commit(xReturn(xClass::*&& pfn)(xParam...), xClass*&& pThis, xParam&&...lp) {
+        return commit(std::bind(pfn, pThis, lp...));
+    }
 
-    //    using ResType = decltype(f(args...));    // typename std::result_of<F(Args...)>::type, 函数 f 的返回值类型
-    //    auto task = std::make_shared<std::packaged_task<ResType()>>(//还有一个作用把任何形式的函数都包装成了一个无返回值无参数的函数，便于统一返回std::function<void()>
-    //        std::bind(std::forward<F>(f),std::forward<F*>(pThis), std::forward<Args>(args)...)//注意和bind的结合使用
-    //        );    // wtf !
-    //    {    // 添加任务到队列
-    //        std::lock_guard<std::mutex> lock{ m_task };
-    //        tasks.emplace([task]() {   // push(Task{...}),,还有一个作用把任何形式的函数都包装成了一个无返回值无参数的函数，便于统一返回std::function<void()>
-    //            (*task)();//用bind把函数参数绑定后就不需要调用的时候传递参数了,用lambda表达式把这个函数改成了void()形式函数
-    //            });
-    //    }
-    //    cv_task.notify_all();    // 唤醒线程执行
-
-    //    std::future<ResType> future = task->get_future();//异步的等待packaged_task包装过的task的返回值
-    //    return future;
-    //}
 private:
     // 获取一个待执行的 task
     Task get_one_task() {

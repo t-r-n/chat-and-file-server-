@@ -12,8 +12,8 @@ public:
     Server() = delete;
     Server(const Server& s) = delete;
     Server& operator=(const Server& s) = delete;
-    static Server& getServer(int port=8006) {
-        static Server se(port);//再次调用不会重新声明
+    static Server& getServer(char* path, int port = 8006) {
+        static Server se(path,port);//再次调用不会重新声明
         return se;
      }
 private:
@@ -26,7 +26,7 @@ private:
     list<shared_ptr<clint>>cl;
     shared_ptr< ilovers::TaskExecutor>executor;
 
-    Server(int port);
+    Server(char*path,int port);
     void clint_handle_accept(boost::system::error_code er, shared_ptr<clint>cl1);
     void gc();//垃圾回收
     //开一个公共数据区开一个线程不断地读这个公共数据区如果该公共数据区有数据拿出来发送给相应的clint的消息接收容器

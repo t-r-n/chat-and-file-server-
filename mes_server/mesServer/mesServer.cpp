@@ -1,8 +1,9 @@
 ﻿#include <iostream>
 #include "server.h"
-int main()
+int main(int argc,char**argv)
 {
-    auto & se=Server::getServer();
+//命令行参数填写文件服务器的filerecv路径E:\trn_project\fin_server\file_server\trfileserver\FileRecv
+    auto & se=Server::getServer(argv[1]);
 
     while (1);
     std::cout << "Hello World!\n";

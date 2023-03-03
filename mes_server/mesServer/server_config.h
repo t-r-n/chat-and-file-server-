@@ -47,14 +47,14 @@ using namespace boost::asio;
         firetrst = 13,
         BuildTalkRoomSuc=14
     };
-#pragma pack(1)  //预编译时字节不对齐
-extern  bool is_have_task;
-extern  mutex my_mutex;
-extern  condition_variable semu_cond;
+    extern  bool is_have_task;
+    extern  mutex my_mutex;
+    extern  condition_variable semu_cond;
 
-extern  bool is_have_task1;
-extern  mutex my_mutex1;
-extern  condition_variable semu_cond1;
+    extern  bool is_have_task1;
+    extern  mutex my_mutex1;
+    extern  condition_variable semu_cond1;
+#pragma pack(1)  //预编译时字节不对齐
     struct Head {
         unsigned char type;//小文件f：如果packid是-1，-1的包不传消息包后面跟上文件名，说明是一个新文件，起一个file类用智能指针管理，vec把每个类串起来,id是索引，传完删掉该位置指针下一个接着用固定ve容量也就是id容量，起一个文件类queue池管理空闲id
         unsigned int length;
@@ -68,28 +68,21 @@ extern  condition_variable semu_cond1;
 #pragma pack()  //恢复字节对齐
     //const int sizeofhead = sizeof(Head);
     const int sizehead = sizeof(Head);
-    struct clintchar {//全局  //到时候好好想想和clint内部消息队列的锁的阻塞和非阻塞问题，//****************************************************************************888
-                               //设置阻塞和非阻塞//全局应该非阻塞轮询各个clint的消息队列，加着锁就询问下一个，否则开始处理，甚至可以
-                               //用线程池，一个线程轮询的时候遇到有用户消息要处理就开始处理,处理完开始睡眠等待被唤醒，然后唤醒一个睡眠的线程开始往后轮询，
-                               // 轮询的时候又遇到整在处理任务的线程可以跳过去
-                                //这样就总有一个线程在轮询
-                                //应该是两个线程池，一个是现在这个轮询私人用户消息队列有没有消息的
-                                //还有一个线程池是转发消息的,这部分实现滞后先搞完最基本的文件传输再说
-                                //只有收到客户端成功的反馈才从队列pop掉消息
+    struct clintchar {//全局
         queue<string>remessage;//待接收消息队列
         queue<string>semessage;//待发送消息队列
-        mutex semu;  //正在往发送消息队列里填消息
-        mutex remu;  //接收消息的锁//服务线程用这两个队列的时候先被复制这两个互斥量然后加锁填数据如果没拿到锁会读到那看看之后优化成非阻塞模式可不可行//拿到锁后还得再看一遍队列是否还有数据有可能之前的on_write已经读完了
-        //condition_variable semu_cond;
+        mutex semu;  //发送消息锁
+        mutex remu;  //接收消息的锁
 
         vector<int>friend_queue;//群号过来的消息该客户有这个群号就往里发送消息
         string name;//后面添加昵称/账号加好友功能//或者不整好友功能把所有服务器有的用户都发过去
         queue<string>filequ;//文件队列//待转发（0 file）或待接受（1 file）的文件
-        unsigned int account;
-        unsigned int password;
+
+        unsigned int account;//账号
+        unsigned int password;//密码
         vector<string>personalfile;//私人保存在服务器云端的文件
-        bool islogin = false;
-        vector<int>talkRooms;
+        bool islogin = false;//是否在线
+        vector<int>talkRooms;//聊天室
     };
     enum { MAXSIZE = 40 * 1024 + 64 };
 
@@ -129,4 +122,6 @@ extern int curMaxIndex;
 extern unordered_map<int, vector<unsigned int>>talkRoomQueue;
 extern mutex talkRoomQueue_mutex;
 
+
+extern char* filePath;
 #endif
