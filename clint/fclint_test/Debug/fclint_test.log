@@ -1,0 +1,19 @@
+﻿cl : 命令行 warning D9014: 值“2039”对于“/wd”无效；假定为“5999”
+cl : 命令行 warning D9014: 值“3646”对于“/wd”无效；假定为“5999”
+  fclint.cpp
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+E:\trn_project\fclint_test\fclint.cpp(39,10): warning C4244: “初始化”: 从“std::streamsize”转换到“int”，可能丢失数据
+E:\trn_project\fclint_test\fclint.cpp(185,14): warning C4244: “=”: 从“time_t”转换到“unsigned int”，可能丢失数据
+  fclint_test.cpp
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+E:\trn_project\fclint_test\fclint_test.cpp(48,31): warning C4018: “<”: 有符号/无符号不匹配
+  正在生成代码...
+  fclint_test.vcxproj -> E:\trn_project\fclint_test\Debug\fclint_test.exe

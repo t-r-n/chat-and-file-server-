@@ -1,18 +1,45 @@
 ﻿  connection.cpp
+E:\trn_project\fin_server\file_server\trfileserver\connection.hpp(4,1): warning C4005: “_CRT_SECURE_NO_WARNINGS”: 宏重定义
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp : message : 参见“_CRT_SECURE_NO_WARNINGS”的前一个定义
   Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
   - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
   - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
   Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
 E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
-E:\trn_project\trhttpserver\connection.cpp(161,37): warning C4244: “=”: 从“std::streamoff”转换到“int”，可能丢失数据
-E:\trn_project\trhttpserver\connection.cpp(171,54): warning C4244: “=”: 从“std::streamsize”转换到“int”，可能丢失数据
-E:\trn_project\trhttpserver\connection.cpp(251,53): warning C4244: “=”: 从“std::streamsize”转换到“int”，可能丢失数据
-E:\trn_project\trhttpserver\connection.cpp(300,32): warning C4477: “snprintf”: 格式字符串“%ld”需要类型“long”的参数，但可变参数 1 拥有了类型“_Rep”
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(89,37): warning C4244: “=”: 从“std::streamoff”转换到“int”，可能丢失数据
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(99,54): warning C4244: “=”: 从“std::streamsize”转换到“int”，可能丢失数据
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(193,53): warning C4244: “=”: 从“std::streamsize”转换到“int”，可能丢失数据
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(242,32): warning C4477: “snprintf”: 格式字符串“%ld”需要类型“long”的参数，但可变参数 1 拥有了类型“_Rep”
           with
           [
               _Rep=__int64
           ]
-E:\trn_project\trhttpserver\connection.cpp(300,32): message : 请考虑在格式字符串中使用“%lld”
-E:\trn_project\trhttpserver\connection.cpp(300,32): message : 请考虑在格式字符串中使用“%I64d”
-E:\trn_project\trhttpserver\connection.cpp(293,14): warning C4101: “seed”: 未引用的局部变量
-  trhttpserver.vcxproj -> E:\trn_project\trhttpserver\Debug\trhttpserver.exe
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(242,32): message : 请考虑在格式字符串中使用“%lld”
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(242,32): message : 请考虑在格式字符串中使用“%I64d”
+E:\trn_project\fin_server\file_server\trfileserver\connection.cpp(235,14): warning C4101: “seed”: 未引用的局部变量
+  connection_manager.cpp
+E:\trn_project\fin_server\file_server\trfileserver\connection.hpp(4,1): warning C4005: “_CRT_SECURE_NO_WARNINGS”: 宏重定义
+E:\trn_project\fin_server\file_server\trfileserver\connection_manager.cpp : message : 参见“_CRT_SECURE_NO_WARNINGS”的前一个定义
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+  server.cpp
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+E:\trn_project\fin_server\file_server\trfileserver\connection.hpp(4,1): warning C4005: “_CRT_SECURE_NO_WARNINGS”: 宏重定义
+E:\trn_project\fin_server\file_server\trfileserver\server.cpp : message : 参见“_CRT_SECURE_NO_WARNINGS”的前一个定义
+E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+  trhttpserver.cpp
+  Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
+  - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
+  - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
+  Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
+E:\trn_project\fin_server\file_server\trfileserver\connection.hpp(4,1): warning C4005: “_CRT_SECURE_NO_WARNINGS”: 宏重定义
+E:\trn_project\fin_server\file_server\trfileserver\trhttpserver.cpp : message : 参见“_CRT_SECURE_NO_WARNINGS”的前一个定义
+E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
+  正在生成代码...
+  trhttpserver.vcxproj -> E:\trn_project\fin_server\file_server\trfileserver\Debug\trhttpserver.exe

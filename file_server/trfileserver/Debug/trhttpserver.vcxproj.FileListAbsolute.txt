@@ -1,1 +1,2 @@
 E:\trn_project\trhttpserver\Debug\trhttpserver.exe
+E:\trn_project\fin_server\file_server\trfileserver\Debug\trhttpserver.exe

@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>image/VCG211258126171.webp</file>
+        <file>image/VCG211258127905.webp</file>
+        <file>image/VCG211298027758.webp</file>
+        <file>image/VCG211304857146.webp</file>
+    </qresource>
+    <qresource prefix="/new/prefix1"/>
+</RCC>
