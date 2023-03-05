@@ -97,9 +97,9 @@ Widget::Widget(QWidget *parent)
     vButtonLayout->addLayout(widgetButton);
     vButtonLayout->addWidget(BuildTalkRoomButton);
     vButtonLayout->addWidget(addTalkRoomButton);
-    hLayout->addWidget(stackWidget);
-    hLayout->addWidget(listWidget);
-    hLayout->addLayout(vButtonLayout);
+    hLayout->addWidget(stackWidget,3);
+    hLayout->addWidget(listWidget,1);
+    hLayout->addLayout(vButtonLayout,1);
 //    QLabel*label1=new QLabel("窗口2",this);
 //    stackWidget->addWidget(label1);
 //    listWidget->addItem("窗口二");
@@ -238,28 +238,9 @@ void Widget::on_pushButton_clicked()
 
 void Widget::on_pushButton_6_clicked()
 {
-//    int x=this->width();
-//    int y=this->height();
-//    for (;x>0||y>0;--x,--y) {
-//        if(x<=0){
-//            x=0;
-//        }
-//        if(y<=0){
-//            y=0;
-//        }
-//        setFixedSize(x,y);
-//        //QTest::qTest()
-//        //QTest::qSleep(500);
-//    };
-    //this->showMinimized();
     this->showMinimized();
-    //setFixedSize(20,20);
 }
 int Widget::headanylize(Head &head){
-    //				NetPacketHeader* p = (NetPacketHeader*)m_getData;
-//				printf(" %c %d %c %s %c %d \n", p->cFlag, p->nLenth, p->cDataType, p->sFileFormat, p->cSendDc, size);
-    //Head* head   = (Head*)tmphead;
-    //printf("type:%c ,length%d ,id%d ,packid%d", head->type, head->length, head->id, head->packid);
     if (head.type == 'm') {
         return 1;
     }
@@ -279,21 +260,42 @@ int Widget::headanylize(Head &head){
     return 0;
 }
 void Widget::handle_message(){
-    string han_str;
+    //string han_str;
     Head re_he;
     for (;;) {
-        {
-            unique_lock<mutex>trlock(cl->re_mutex,std::defer_lock);
-            if(trlock.try_lock()){
-                if(cl->readqu.size()>0){
-                    han_str=cl->readqu.front();
-                    cl->readqu.pop();
-                    //qDebug()<<"接收到消息"<<QString::fromStdString(han_str)<<endl;
-                }
+        string han_str;
+        unique_lock<mutex>trlock(cl->re_mutex);
+        cl->re_mutex_cond.wait(trlock,[this](){
+            if(this->cl->haveMes.load()){
+                cl->haveMes.store(false);//尽早置false防止读线程又读到消息重置该变量
+                return true;
             }
+            return false;
+        });
+        if(cl->readqu.size()>0){
+            han_str=cl->readqu.front();
+            cl->readqu.pop();
+        }else{
+            continue;
         }
+        trlock.unlock();
+//        if(trlock.try_lock()){
+//            if(cl->readqu.size()>0){
+//                han_str=cl->readqu.front();
+//                cl->readqu.pop();
+//            }else{
+//                std::this_thread::yield();
+//                continue;
+//            }
+//            trlock.unlock();
+//        }else{
+//            std::this_thread::yield();
+//            continue;
+//        }
         re_he=getHead(han_str);
         int ret=headanylize(re_he);
+        //Head he=getHead(han_str);
+        //qDebug()<<"talkhe->type:"<<he.type<<"he->acc"<<he.account<<"he->sen:"<<he.sendto<<"he.id:"<<he.id<<endl;
         if(ret==1){
             string mes(han_str.begin()+sizeof(Head),han_str.begin()+(sizeof(Head)+re_he.length));
             int from=re_he.account;
@@ -303,33 +305,14 @@ void Widget::handle_message(){
             emit this->signal_mes(sstmp,from);
             //emit this->signal_mes(QString::fromStdString(mes),from);
             //            //string tmp(buf.begin() + sizeofhead, buf.begin() + (sizeofhead + leng));
-            han_str.clear();//清空字符串否则一直进入这个循环
         }else if(ret==2){
-            //qDebug()<<han_str.data()<<"  "<<han_str.size()<<endl;
             QString s;
             for(int i=0;i<han_str.size()&&i<(sizeofhead+re_he.length);++i){
                 qDebug()<<han_str[i];
                 s+=han_str[i];
             }
             emit signal_file_recv(s);
-//            string mes1(han_str.begin()+sizeof(Head),han_str.begin()+(sizeof(Head)+re_he.length));
-//            QString mes(str2qstr(mes1));
-//            QString status;
-//            if(re_he.status==1){
-//                status="receiving";
-//            }else if(re_he.status==2){
-//                status="received";
-//            }else if(re_he.status==3){
-//                status="receive error";
-//            }else{
-//                status="未知错误";
-//            }
-//            mes+=" status: "+status;
-//            //mes+=" status: "+std::to_string(re_he.status);
-//            int from=re_he.account;
-//            emit this->signal_mes(mes,from);
-        //emit this->signal_mes(QString::fromStdString(mes),from);
-        //            //string tmp(buf.begin() + sizeofhead, buf.begin() + (sizeofhead + leng));
+
             han_str.clear();//清空字符串否则一直进入这个循环
         }else if(ret==3){//创建群聊加入群聊成功返回群聊id
             emit buildTalkRooms(re_he.id);
@@ -341,13 +324,13 @@ void Widget::handle_message(){
 //                    fireid.push(re_he.status);
 //                }
 //            }
-            han_str.clear();//清空字符串否则一直进入这个循环
+
         }else if(ret==4){
             string mes1(han_str.begin()+sizeof(Head),han_str.begin()+(sizeof(Head)+re_he.length));
             //QString mes(str2qstr(mes1));
             int from=re_he.account;
             emit this->signal_mes(QString::fromStdString(mes1),from);
-            han_str.clear();//清空字符串否则一直进入这个循环
+
         }
         else if(ret==5){
             string mes1(han_str.begin()+sizeof(Head),han_str.begin()+(sizeof(Head)+re_he.length));
@@ -368,7 +351,7 @@ void Widget::handle_message(){
             emit this->signal_mes(mes,from);
         //emit this->signal_mes(QString::fromStdString(mes),from);
         //            //string tmp(buf.begin() + sizeofhead, buf.begin() + (sizeofhead + leng));
-            han_str.clear();//清空字符串否则一直进入这个循环
+
         }else if(ret==6){
             string mes1(han_str.begin()+sizeof(Head),han_str.begin()+(sizeof(Head)+re_he.length));
             QString mes(str2qstr(mes1));
@@ -388,8 +371,9 @@ void Widget::handle_message(){
             emit this->signal_mes(mes,from);
         //emit this->signal_mes(QString::fromStdString(mes),from);
         //            //string tmp(buf.begin() + sizeofhead, buf.begin() + (sizeofhead + leng));
-            han_str.clear();//清空字符串否则一直进入这个循环
+
         }else if(ret==7){//群聊消息
+
             string mes(han_str.begin()+sizeof(Head),han_str.begin()+(sizeof(Head)+re_he.length));
             int from=re_he.account;
 
@@ -403,8 +387,9 @@ void Widget::handle_message(){
 
             //emit this->signal_mes(QString::fromStdString(mes),from);
             //            //string tmp(buf.begin() + sizeofhead, buf.begin() + (sizeofhead + leng));
-            han_str.clear();//清空字符串否则一直进入这个循环
+
         }
+        han_str.clear();
     };
 }
 

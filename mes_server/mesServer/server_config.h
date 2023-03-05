@@ -2,7 +2,7 @@
 #define SERVER_CONFIG_H
 
 //#define DEBUG
-#define LOCK_DEBUG
+//#define LOCK_DEBUG
 //#define LINUX
 #define WIN
 
@@ -26,10 +26,10 @@
 #include <dirent.h>
 #include <sys/types.h>
 #endif
-#include"thread_pool.h"             //只能添加不同函数和静态成员函数
+#include"thread_pool.h"     
 #include<fstream>
 #include<boost/asio/strand.hpp>
-//#include<boost/thread.hpp>//包含该lib库方法属性-》连接器-》输入-》附加依赖项E:\boost_1_79_0\boost_1_79_0\bin.v2\libs\thread\build\msvc-14.2\debug\address-model-32\link-static\threadapi-win32\threading-multi\libboost_thread-vc142-mt-gd-x32-1_79.lib
+
 using namespace std;
 using namespace boost::asio;
 

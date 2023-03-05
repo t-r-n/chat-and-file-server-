@@ -115,7 +115,7 @@ namespace http {
 							acc = 10086;
 							filename = string(h->filename);
 							fh.type = 's';
-							fh.sendto = h->sendto;//填写文件发送者告知对方接收方已接收文件 ，到这说明接收方已经接收该文件
+							fh.sendto = h->sendto;
 							fh.acc = h->acc;//接收方
 							fh.content_length = content_length;
 							strncpy(fh.filename, h->filename, strlen(h->filename));
@@ -127,7 +127,7 @@ namespace http {
 							connection_manager_.stop(shared_from_this());
 							return;
 						}
-						//cout << ((Fhead*)(headbuf.c_str()))->content_length << endl;
+
 						async_write(socket_, buffer(headbuf), [this, self](boost::system::error_code er, size_t sz) {
 							if (!er) {
 								do_content_write();

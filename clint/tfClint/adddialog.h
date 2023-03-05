@@ -9,6 +9,7 @@
 #include<QHBoxLayout>
 #include<QVBoxLayout>
 #include<QButtonGroup>
+#include<QLabel>
 class addDialog : public QDialog
 {
     Q_OBJECT

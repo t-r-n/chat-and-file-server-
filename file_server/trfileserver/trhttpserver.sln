@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.31829.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trhttpserver", "trhttpserver.vcxproj", "{DB5FA781-8549-4C4B-BC78-96AE76EC239E}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup2", "..\Setup2\Setup2.vdproj", "{0682C59E-1E59-49FD-8498-C9C6D9004419}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -23,10 +21,6 @@ Global
 		{DB5FA781-8549-4C4B-BC78-96AE76EC239E}.Release|x64.Build.0 = Release|x64
 		{DB5FA781-8549-4C4B-BC78-96AE76EC239E}.Release|x86.ActiveCfg = Release|Win32
 		{DB5FA781-8549-4C4B-BC78-96AE76EC239E}.Release|x86.Build.0 = Release|Win32
-		{0682C59E-1E59-49FD-8498-C9C6D9004419}.Debug|x64.ActiveCfg = Debug
-		{0682C59E-1E59-49FD-8498-C9C6D9004419}.Debug|x86.ActiveCfg = Debug
-		{0682C59E-1E59-49FD-8498-C9C6D9004419}.Release|x64.ActiveCfg = Release
-		{0682C59E-1E59-49FD-8498-C9C6D9004419}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

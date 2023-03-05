@@ -36,8 +36,6 @@ void clint::on_read_content(Head he) {
     buf.clear();  //好像是这边导致的断言问题
     buf.resize(1024);//不加这两行async_read会一直读取
     auto self(shared_from_this());
-    cout << "reading ing" <<he.length << endl;
-    //he.length突然错误什么问题找到问题中文出错
     async_read(sock_, buffer(buf), transfer_exactly(he.length), strand_.wrap([this, self,he](boost::system::error_code er, size_t sz) {
         if (er) {
             int ret = errorhandle(er);
@@ -50,12 +48,9 @@ void clint::on_read_content(Head he) {
         }
         int ret = headanylize((const Head*)&he);
         h = (Head*)&he;
-        cout << "reading" << endl;
         switch (ret) {
             case 1: {//消息转发
-                cout << __LINE__<<endl;
-                //消息/文件发送给谁是放到包头里还是在消息里//放在包里这好像还得重新处理下才能放回消息队列里或者这边不处理直接让对方on_write那边处理直接压倒对列里
-//当前版本是不处理  //必须是不处理server那边把包头稍微改一下直接发给对方毕竟对方接受的数据也应该有各种包头
+           
                 buf.insert(0, string((char*)&he, sizehead));
                 {
                     if (clch) {
@@ -65,14 +60,13 @@ void clint::on_read_content(Head he) {
                         lock_guard<mutex> selock(clch->semu);
 
                         clch->semessage.push(buf);
-                        is_have_task = true;//***********************************************************************************************************************
+                        is_have_task = true;
                         semu_cond.notify_all();//唤醒处理任务的线程
                     }
-                }//这个只是能把该消息发送到服务器上如果对方不在线或服务宕机都不会把数据交到对方手上，这边只能保证服务器这边一定成功发给对方了
+                }
                 break;
             }
             case 2: {
-                cout <<"h->type;" << h->type << "he->account" << h->account << "h->sen:" << h->sendto << "name:" << buf << endl;
                 string tmpbuf(buf.data(),h->length);
                 
                 buf = tmpbuf;
@@ -83,10 +77,10 @@ void clint::on_read_content(Head he) {
                     if (clch) {
                         lock_guard<mutex> selock(clch->semu);
                         clch->semessage.push(buf);
-                        is_have_task = true;//***********************************************************************************************************************
-                        semu_cond.notify_all();//唤醒处理任务的线程
+                        is_have_task = true;
+                        semu_cond.notify_all();
                     }
-                }//这个只是能把该消息发送到服务器上如果对方不在线或服务宕机都不会把数据交到对方手上，这边只能保证服务器这边一定成功发给对方了
+                }
                 break;
             }
             case 3: {//登陆验证
@@ -107,9 +101,8 @@ void clint::on_read_content(Head he) {
                 if (tmppassword != h->mima) {//密码不正确;
                     this->on_write_reback(reback::passerror);
                 }
-                else {//登陆成功//把全局的clint拷贝一份     ///*************当出现大量已下线的account占着哈希表的资源这是不合适的
-                    //加不加锁?
-                    //看看有没有已经在线
+                else {//登陆成功//把全局的clint拷贝一份 
+
                     bool isloogin = false;
                     {
                         lock_guard<mutex>cur_log_lock(cur_account_ptr_mutex);
@@ -135,22 +128,18 @@ void clint::on_read_content(Head he) {
                     }
                     if (isloogin) {
                         on_write_reback(reback::login);
-                        //断开链接吗？
                     }
                     else {
-                        clch = account[h->account];  //之后检查一下这个account里的sharer——ptr和上面的cur_ptr有没有冲突
+                        clch = account[h->account];  
                         on_write_reback(reback::logsucc);
                         cout << "登陆成功" << endl;
-                        //is_have_task = true;//***********************************************************************************************************************
-                        //semu_cond.notify_all();//唤醒处理任务的线程
-                        //is_have_task1 = true;//这里为了看看有没有不在线时的消息现在可以不用了
-                        //semu_cond1.notify_all();
+
                     }
                 }
                 break;
             }
             case 4: {
-                cout << __LINE__ << endl;
+
                 clch = make_shared<clintchar>();
                 bool issuc = false;
                 {
@@ -184,7 +173,7 @@ void clint::on_read_content(Head he) {
                         on_write_reback(reback::readerror);
                         break;
                     }
-                    talkRoomQueue[h->id] = { h->account };
+                    talkRoomQueue[h->id].push_back(h->account );
                     if (clch) {
                         clch->talkRooms.push_back(h->id);
                     }
@@ -222,6 +211,8 @@ void clint::on_read_content(Head he) {
                     lock_guard<mutex>talkRoomQueue_lock(talkRoomQueue_mutex);
                     for (int i = 0; i < talkRoomQueue[he.id].size(); ++i) {
                         {
+                            int tmp = talkRoomQueue[he.id][i];
+                            //cout << "正在往" << tmp << "里压入群消息" << endl;
                             lock_guard<mutex>account_lock(acc_mutex);
                             lock_guard<mutex>semu_lock(account[talkRoomQueue[he.id][i]]->remu);
                             account[talkRoomQueue[he.id][i]]->remessage.push(buf);
@@ -243,7 +234,7 @@ void clint::on_read_plus() {
     if (isdiascard) {
         return;
     }
-    buf.clear();  //好像是这边导致的断言问题
+    buf.clear(); 
     buf.resize(1024);//不加这两行async_read会一直读取
     auto self(shared_from_this());
     async_read(sock_, buffer(buf), transfer_exactly(sizehead), strand_.wrap([this, self](boost::system::error_code er, size_t sz) {
@@ -257,14 +248,13 @@ void clint::on_read_plus() {
             return;
         }
         Head h = getHead(buf);
-        cout << "clint.cpp:" << __LINE__ << " h->type:" << h.type << "h.sendto:" << h.sendto << "h.acc:" << h.account << "h.length:" << h.length << endl;
         int ret = headanylize((const Head*)buf.c_str());
         if (h.length >= 0&&h.length<1024) {
             self->on_read_content(h);
             return;
         }
         else {
-            std::cout << "读到的消息只有包头，功能为扩充,这里应该清空socket缓冲区" << std::endl;
+            std::cout << "这里应该清空socket缓冲区" << std::endl;
             self->on_read_plus();
             
         }
@@ -289,6 +279,7 @@ void clint::on_write() {
             return;//多加一层认证防止各种不确定性
         }
     }
+    //cout << "clint.cpp" << __LINE__ << "send one mes" << endl;
     async_write(sock_, buffer(reme, reme.size()), transfer_at_least(reme.size() - 1), bind(&clint::clint_handle_write, this, reme, _1, _2));//这边占位符可能还有些问题
 }
 void clint::clint_handle_write(string p, boost::system::error_code er, size_t sz) {
@@ -368,11 +359,7 @@ int clint::errorhandle(boost::system::error_code& er) {
     if (isdiascard) {//有其他异步任务已经检测出该对线被丢弃了
         return 1;
     }
-    //int ervalue = er.value();
-    //if (ervalue == 10009 || ervalue == 2 || ervalue == 995 || ervalue == 10054 || ervalue == 2) {//
-    //    isdiascard = true;
-    //    return 0;
-    //}
+
     if (er != boost::asio::error::operation_aborted)//本端未关闭套接字
     {
         isdiascard = true;
@@ -415,12 +402,10 @@ void clint::ls_file(string &s) {
     closedir(pDir);
 #endif // UNIX 
 #ifdef WIN
-    //string eassy;
     bool is = true;
     try {
         intptr_t handle;
         struct _finddata_t fileinfo;
-        //第一次查找
         handle = _findfirst(filePath, &fileinfo);
         cout <<"filePath:" << filePath << endl;
         //cout << "find:" << s <<"s.size():"<<s.size() << endl;
@@ -429,9 +414,6 @@ void clint::ls_file(string &s) {
             //找到的文件的文件名
             if ((!strcmp(fileinfo.name, ".")) || !strcmp(fileinfo.name, ".."))continue;
             string tmp(fileinfo.name);
- /*           for (int i = 0; fileinfo.name[i] != '/0' && i < 256; ++i) {
-                tmp += fileinfo.name[i];
-            }*/
             cout <<"tmp:" << tmp << endl;
             
             if(tmp.find(s)!=string::npos){

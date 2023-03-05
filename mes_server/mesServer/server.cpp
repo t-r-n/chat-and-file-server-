@@ -114,7 +114,6 @@ void Server::changestatus(string& p, unsigned int st) {
 void Server::translate() {
     static queue<string> tmpMesQueue;
     static Head h;
-    cout << "translate start" << endl;
     while (1) {
         {
             lock_guard<mutex>acc_mutex_lock(acc_mutex);
@@ -122,7 +121,6 @@ void Server::translate() {
                 unique_lock<mutex>semu_lock(a.second->semu, std::defer_lock);
                 if (semu_lock.try_lock()) {
                     if (a.second->semessage.size() > 0) {
-                        cout << "catch lock" << endl;//什么鬼bug不加就接受不了消息
                         tmpMesQueue.push( a.second->semessage.front() );
                         a.second->semessage.pop();
                     }

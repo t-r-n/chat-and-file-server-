@@ -133,11 +133,10 @@ private:
             //std::cout << __LINE__ << std::endl;
             if (Task task = get_one_task()) {
                 task();    //
-                //std::cout << __LINE__ << std::endl;
-                //std::this_thread::sleep_for(std::chrono::microseconds(500));
+
             }
             else {
-                // return;    // done
+
             }
         }
     }

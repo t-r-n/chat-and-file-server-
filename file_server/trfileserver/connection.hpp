@@ -47,7 +47,7 @@ const int BUFSIZE = 8192;
 #include"thread_pool.h"             //只能添加不同函数和静态成员函数
 #include<fstream>
 #include<boost/asio/strand.hpp>
-//#include<boost/thread.hpp>//包含该lib库方法属性-》连接器-》输入-》附加依赖项E:\boost_1_79_0\boost_1_79_0\bin.v2\libs\thread\build\msvc-14.2\debug\address-model-32\link-static\threadapi-win32\threading-multi\libboost_thread-vc142-mt-gd-x32-1_79.lib
+
 using namespace std;
 using namespace boost::asio;
 #endif //FILETR
@@ -56,7 +56,7 @@ namespace http {
 
         class connection_manager;
 
-        /// Represents a single connection from a client.
+
         class connection
             : public std::enable_shared_from_this<connection>
         {
@@ -64,31 +64,25 @@ namespace http {
             connection(const connection&) = delete;
             connection& operator=(const connection&) = delete;
 
-            /// Construct a connection with the given socket.
+
             explicit connection(boost::asio::ip::tcp::socket socket,
                 connection_manager& manager,int& maxSizeOnce);
 
-            /// Start the first asynchronous operation for the connection.
+
             void start();
 
-            /// Stop all asynchronous operations associated with the connection.
             void stop();
 
         private:
-            /// Perform an asynchronous read operation.
+
             void do_read();
 
-            /// Perform an asynchronous write operation.
-            //void do_write();
 
-            /// Socket for the connection.
             boost::asio::ip::tcp::socket socket_;
 
-            /// The manager for this connection.
+
             connection_manager& connection_manager_;
 
-
-            /// Buffer for incoming data.
             std::array<char, 8192> buffer_;
 
 

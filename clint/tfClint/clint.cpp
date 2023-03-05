@@ -5,7 +5,9 @@ clint::clint(shared_ptr<ip::tcp::socket>sock)
 {
     sock_=sock;
     re_buf.resize(1024);
+    haveMes.store(false);
     wr_buf.resize(1024);
+
     vector<thread>ve;
     ve.push_back(thread(&clint::read_thread,this));
     ve.push_back(thread(&clint::write_thread,this));
@@ -22,6 +24,8 @@ void clint::read_thread(){
             lock_guard<mutex>re_lc(this->re_mutex);
             readqu.push(re_buf);
         }
+        haveMes.store(true);
+        re_mutex_cond.notify_all();
     }
 }
 void clint::write_thread(){

@@ -44,17 +44,9 @@ public:
     Head getHead(const string &buff) {
         //char tmphead[sizeof(Head)];
         string headme(buff.begin(), buff.begin() + sizeof(Head));
-        //memcpy(tmphead, headme.c_str(), sizeof(Head));
-        //Head h = *(Head*)ttmphead;
-        //Head hh = *(Head*)ttmphead;
         Head hh;
         memcpy(&hh, headme.c_str(), sizeof(Head));
         return hh;
-
-        //plus:
-
-        //Head he = *(Head*)(string(buf.begin(), buf.begin() + sizehead).c_str());
-        //return he;
 
     }
 

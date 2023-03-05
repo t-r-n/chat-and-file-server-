@@ -50,6 +50,6 @@ int main(int argc, char *argv[])
     w.ipstr=ipstr;
     d.getlog(&islogin,&w,sock);
     //w.setWindowFlags(Qt::FramelessWindowHint);
-    //w.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint);
+    w.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint);
     return a.exec();
 }

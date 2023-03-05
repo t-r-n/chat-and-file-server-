@@ -28,11 +28,7 @@ public:
     bool textistrue(string acc1,string pass1);
     void touchlabel(QString s){}; //信号有点问题不能正常传参
     Head getHead(string &buff) {
-        //char tmphead[sizeof(Head)];
         string headme(buff.begin(), buff.begin() + sizeof(Head));
-        //memcpy(tmphead, headme.c_str(), sizeof(Head));
-        //Head h = *(Head*)ttmphead;
-        //Head hh = *(Head*)ttmphead;
         Head hh;
         memcpy(&hh, headme.c_str(), sizeof(Head));
         return hh;

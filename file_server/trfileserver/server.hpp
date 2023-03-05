@@ -10,7 +10,7 @@
 namespace http {
     namespace server {
 
-        /// The top-level class of the HTTP server.
+
         class server
         {
         public:
@@ -19,7 +19,7 @@ namespace http {
 
 
             explicit server(const std::string& address, const std::string& port,
-                const std::string& doc_root, const int maxSizeofOnce);
+                 const int maxSizeofOnce);
 
 
             void run();
