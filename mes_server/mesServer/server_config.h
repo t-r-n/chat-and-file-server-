@@ -4,6 +4,7 @@
 //#define DEBUG
 //#define LOCK_DEBUG
 //#define LINUX
+#define COMYSQL
 #define WIN
 
 #include <iostream>
@@ -59,7 +60,7 @@ using namespace boost::asio;
         unsigned char type;//小文件f：如果packid是-1，-1的包不传消息包后面跟上文件名，说明是一个新文件，起一个file类用智能指针管理，vec把每个类串起来,id是索引，传完删掉该位置指针下一个接着用固定ve容量也就是id容量，起一个文件类queue池管理空闲id
         unsigned int length;
         unsigned int id;//如果是文件类型则把数据传给相应的id
-        int          packid;//描述如果是文件是第几个数据包保证客户端若是多线程文件传输的顺序性
+        int          packid;//暂时做用户名长度字段 包=包头+文本+用户名
         unsigned int account;//账号
         unsigned int mima;//密码
         unsigned int sendto;//0给服务器 非0即要发给的账户
@@ -69,18 +70,18 @@ using namespace boost::asio;
     //const int sizeofhead = sizeof(Head);
     const int sizehead = sizeof(Head);
     struct clintchar {//全局
-        queue<string>remessage;//待接收消息队列
-        queue<string>semessage;//待发送消息队列
+        queue<std::string>remessage;//待接收消息队列
+        queue<std::string>semessage;//待发送消息队列
         mutex semu;  //发送消息锁
         mutex remu;  //接收消息的锁
 
         vector<int>friend_queue;//群号过来的消息该客户有这个群号就往里发送消息
-        string name;//后面添加昵称/账号加好友功能//或者不整好友功能把所有服务器有的用户都发过去
-        queue<string>filequ;//文件队列//待转发（0 file）或待接受（1 file）的文件
+        std::string name;//后面添加昵称/账号加好友功能//或者不整好友功能把所有服务器有的用户都发过去
+        queue<std::string>filequ;//文件队列//待转发（0 file）或待接受（1 file）的文件
 
         unsigned int account;//账号
         unsigned int password;//密码
-        vector<string>personalfile;//私人保存在服务器云端的文件
+        vector<std::string>personalfile;//私人保存在服务器云端的文件
         bool islogin = false;//是否在线
         vector<int>talkRooms;//聊天室
     };
@@ -97,24 +98,28 @@ extern    unordered_map<int, bool>islogin;//在线用户指针速查
     //客户端那边传文件应该另起一个线程不影响主线程通信
 
     struct talkgroupchar {//群聊消息 //该功能应该还得往消息头里加入发送对象要发送给的群组，clintchar里要保存所有的群组的id
-        queue<string>remessage;//待接收消息队列
-        queue<string>semessage;//待发送消息队列
+        queue<std::string>remessage;//待接收消息队列
+        queue<std::string>semessage;//待发送消息队列
         mutex semu;  //正在往发送消息队列里填消息
         mutex remu;  //接收消息的锁//服务线程用这两个队列的时候先被复制这两个互斥量然后加锁填数据如果没拿到锁会读到那看看之后优化成非阻塞模式可不可行
                      //拿到锁后还得再看一遍队列是否还有数据有可能之前的on_write已经读完了
-        vector<string>mesage;//储存群内所有的消息
-        vector<string>friend_queue;  //群内拥有成员数
-        string name;//后面添加昵称/账号加好友功能//或者不整好友功能把所有服务器有的用户都发过去
-        queue<string>filequ;//文件队列//待转发（0 file）或待接受（1 file）的文件
+        vector<std::string>mesage;//储存群内所有的消息
+        vector<std::string>friend_queue;  //群内拥有成员数
+        std::string name;//后面添加昵称/账号加好友功能//或者不整好友功能把所有服务器有的用户都发过去
+        queue<std::string>filequ;//文件队列//待转发（0 file）或待接受（1 file）的文件
         unsigned int id;//群号
         unsigned int password;
-        vector<string>file;//群文件
+        vector<std::string>file;//群文件
         int status = false; //群聊状态，存在，待删除
     };
 
-extern unordered_map<int, queue<string>>handleingque;
+extern unordered_map<int, queue<std::string>>handleingque;
 extern mutex handle_acc_mutex;
     //extern shared_ptr<Server>Se_ptr;
+
+extern queue<std::string>sqlList;
+extern mutex sqlList_mu;
+
 
 
 //聊天室

@@ -3,6 +3,7 @@
 #define SERVER_H
 #include "server_config.h"
 #include"clint.h"
+#include"mysql_pool.h"
 //#include"FileServer.h"
 class Server :public std::enable_shared_from_this<Server> {//服务器应该开一个线程池读取客户的消息队列调用相应客户的on_write函数
 public:
@@ -17,7 +18,7 @@ public:
         return se;
      }
 private:
-    string buf;
+    std::string buf;
     io_service service;
     sock_ptr sock;
     shared_ptr< ip::tcp::acceptor>acceptor;
@@ -25,7 +26,7 @@ private:
     int curclintid = 0;
     list<shared_ptr<clint>>cl;
     shared_ptr< ilovers::TaskExecutor>executor;
-
+    unique_ptr< MysqlPool>mysqlPool;
     Server(char*path,int port);
     void clint_handle_accept(boost::system::error_code er, shared_ptr<clint>cl1);
     void gc();//垃圾回收
@@ -33,14 +34,16 @@ private:
     //不对，如果是异步编程应该是去调用相应clintid的on_write方法
     char ttmphead[sizeof(Head)];
     Head* h;
-    void changestatus(string& p, unsigned int st);
-    static Head getHead(string& buff) {
+    void changestatus(std::string& p, unsigned int st);
+    static Head getHead(std::string& buff) {
         Head hh;
         memcpy(&hh, buff.c_str(),sizehead);
         return hh;
-        //return *(fHead*)string(buff.begin(), buff.begin() + sizeofFhead).c_str();
+        //return *(fHead*)std::string(buff.begin(), buff.begin() + sizeofFhead).c_str();
     }
-    //unordered_map<int, queue<string>>handleingque;
+    void initData();
+    void handleSql();
+    //unordered_map<int, queue<std::string>>handleingque;
     //mutex handle_acc_mutex;
     void translate();
     void tmphandlethread();

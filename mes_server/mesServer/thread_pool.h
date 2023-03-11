@@ -56,17 +56,24 @@ private:
     std::condition_variable cv_task;
     // 是否关闭提交
     std::atomic<bool> stop;
-
+    //std::vector<std::atomic<bool>> tasking;
 public:
     // 构造
 
     TaskExecutor(size_t size = 4) : stop{ false } {
         size = size < 1 ? 1 : size;
+        //tasking.resize(size, false);
         for (size_t i = 0; i < size; ++i) {
             pool.emplace_back(&TaskExecutor::schedual, this);    // push_back(std::thread{...})
+            //tasking[i].store(false);
         }
     }
-    void join() {//暂时这么写目的是不让主线程退出，之后改成真join//现在这个join就是主线程卡在这个while循环一直跑
+    void join() {//等待所有任务执行结束
+        /*设置开始阻塞标签，1，停止提交任务，2线程中所有任务执行完毕退出*/
+        shutdown();//停止任务提交
+        //任务队列为空且线程池中线程均空闲
+
+        restart();//重启任务提交
         std::cout << "join的线程" << std::this_thread::get_id() << std::endl;
         while (true) {
             std::this_thread::sleep_for(std::chrono::microseconds(500));
@@ -93,7 +100,7 @@ public:
     // 提交一个任务
     template<class F, class... Args>
     auto commit(F&& f, Args&&... args) ->std::future<decltype(f(args...))> {//用了右值引用不拷贝传进来的参数，给传进来的参数续命
-        if (stop.load()) {    // stop == true ??
+        if (stop.load()) {    // stop == true ?
             throw std::runtime_error("task executor have closed commit.");
         }
         using ResType = decltype(f(args...));    // typename std::result_of<F(Args...)>::type, 函数 f 的返回值类型
@@ -114,12 +121,12 @@ public:
     }
     template<typename xClass, typename xReturn, typename...xParam>//用这个就可以特化成员函数版本了
     auto commit(xReturn(xClass::*&& pfn)(xParam...), xClass*&& pThis, xParam&&...lp) {
-        return commit(std::bind(pfn, pThis, lp...));
+        return commit(std::bind(std::forward(pfn), std::forward(pThis), std::forward(lp...)));
     }
 
 private:
     // 获取一个待执行的 task
-    Task get_one_task() {
+    Task get_one_task() {//从任务队列中去一个任务交给无任务的线程执行
         std::unique_lock<std::mutex> lock{ m_task };
         cv_task.wait(lock, [this]() { return !tasks.empty(); });    // wait 直到有 task
         Task task{ std::move(tasks.front()) };    // 取一个 task
@@ -132,6 +139,7 @@ private:
         while (true) {
             //std::cout << __LINE__ << std::endl;
             if (Task task = get_one_task()) {
+                
                 task();    //
 
             }

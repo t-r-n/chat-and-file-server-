@@ -37,10 +37,9 @@ public:
     void clint_handle_write(string p, boost::system::error_code er, size_t sz);
     int headanylize(const Head* head);
     void on_read_content(Head he);
-    void on_read();
+    //void on_read();
     void on_read_plus();
     void ls_file(string& s);
-    //void clint::on_read_http();
     ~clint() {
     }
     int errorhandle(boost::system::error_code& er);

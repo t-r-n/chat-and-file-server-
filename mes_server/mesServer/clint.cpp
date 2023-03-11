@@ -14,19 +14,9 @@ void clint::on_write_reback(int back,Head he,bool is) {
     async_write(sock_, buffer(on_write1_buf), [=, self = shared_from_this()](boost::system::error_code er, size_t size) {
         //async_write(sock_, buffer(buf1), [=, this](boost::system::error_code er, size_t size) {
         if (er) {
-            int ret = errorhandle(er);
-            if (ret == 0) {
-                cout << this->id << ":链接关闭" << endl;
-
-                sock_.close();
-                islogout = true;
-            }
-            else {
-                on_write_reback(reback::writeerror);
-            }
+            errorhandle(er);
             return;
         }
-        cout << "send ed:" << he.type << " " << he.status << " " << he.length << endl;
     });
 }
 void clint::on_read_content(Head he) {
@@ -36,18 +26,15 @@ void clint::on_read_content(Head he) {
     buf.clear();  //好像是这边导致的断言问题
     buf.resize(1024);//不加这两行async_read会一直读取
     auto self(shared_from_this());
+    
     async_read(sock_, buffer(buf), transfer_exactly(he.length), strand_.wrap([this, self,he](boost::system::error_code er, size_t sz) {
         if (er) {
-            int ret = errorhandle(er);
-            if (ret == 0) {
-                cout << "链接关闭" << endl;//网络错误
-                sock_.close();
-                islogout = true;
-            }
+            errorhandle(er);
             return;
         }
         int ret = headanylize((const Head*)&he);
         h = (Head*)&he;
+        std::cout <<"message:" << buf << endl;
         switch (ret) {
             case 1: {//消息转发
            
@@ -62,6 +49,14 @@ void clint::on_read_content(Head he) {
                         clch->semessage.push(buf);
                         is_have_task = true;
                         semu_cond.notify_all();//唤醒处理任务的线程
+                    }
+                    else {
+                        std::cout << "un login maybe attack" << std::endl;
+                        //lock_guard<mutex> selock(acc_mutex);
+                        //if (account.find(he.account) != account.end()) {
+                        //    lock_guard<mutex> seelock(account[he.account]->semu);
+                        //    account[he.account]->semessage.push(buf);
+                        //}
                     }
                 }
                 break;
@@ -132,7 +127,7 @@ void clint::on_read_content(Head he) {
                     else {
                         clch = account[h->account];  
                         on_write_reback(reback::logsucc);
-                        cout << "登陆成功" << endl;
+                        cout << "login succ" << endl;
 
                     }
                 }
@@ -150,14 +145,28 @@ void clint::on_read_content(Head he) {
                     }
                     else {
                         on_write_reback(reback::loginfal);
-                        cout << "注册失败" << endl;
+                        cout << "sign up error" << endl;
                     }
                 }
                 if (issuc) {
+#ifdef COMYSQL
+                    //添加sql语句
+                    string tmp="insert into account (acc,pass) values (";
+                    tmp += std::to_string(h->account);
+                    tmp += ',';
+                    tmp+= std::to_string(h->mima);
+                    tmp += ')';
+                    
+                    {
+                        lock_guard<mutex>sqlLock(sqlList_mu);
+                        sqlList.push(tmp);
+                    }
+#endif
+
                     clch->account = h->account;
                     clch->password = h->mima;
                     on_write_reback(reback::loginsucc);
-                    cout << "注册成功" << endl;
+                    cout << "sign up succ" << endl;
                 }
                 break;
             }
@@ -238,23 +247,34 @@ void clint::on_read_plus() {
     buf.resize(1024);//不加这两行async_read会一直读取
     auto self(shared_from_this());
     async_read(sock_, buffer(buf), transfer_exactly(sizehead), strand_.wrap([this, self](boost::system::error_code er, size_t sz) {
-        if (er) {//发生错误
-            int ret = errorhandle(er);
-            if (ret == 0) {//发生错误时,本端未关闭，那就close释放内存
-                cout << "链接关闭" << endl;//网络错误
-                sock_.close();
-                islogout = true;
-            }
+        if (er) {
+            errorhandle(er);
             return;
         }
         Head h = getHead(buf);
         int ret = headanylize((const Head*)buf.c_str());
-        if (h.length >= 0&&h.length<1024) {
+        std::cout << hex << buf << endl;
+        std::cout << "h.type:" << h.type << "h.acc:" << h.account << "h.sen:" << h.sendto << "h.length:" << h.length << std::endl;
+        if ((h.length >= 0&&h.length<1024)&&ret!=0) {
             self->on_read_content(h);
             return;
         }
         else {
-            std::cout << "这里应该清空socket缓冲区" << std::endl;
+            //std::cout << "这里应该清空socket缓冲区" << std::endl;
+            
+            if (clch) {//如果是在线用户清除内存再关闭连接
+                {
+                    isdiascard = true;
+                    islogout = true;
+                    sock_.close();
+                }
+            }
+            else {//断开连接
+                {
+                    sock_.close();
+                }
+            }
+            return;
             self->on_read_plus();
             
         }
@@ -279,6 +299,7 @@ void clint::on_write() {
             return;//多加一层认证防止各种不确定性
         }
     }
+    
     //cout << "clint.cpp" << __LINE__ << "send one mes" << endl;
     async_write(sock_, buffer(reme, reme.size()), transfer_at_least(reme.size() - 1), bind(&clint::clint_handle_write, this, reme, _1, _2));//这边占位符可能还有些问题
 }
@@ -287,24 +308,17 @@ void clint::clint_handle_write(string p, boost::system::error_code er, size_t sz
         return;
     }
     if (er) {
-        int ret = errorhandle(er);
-        if (ret == 0) {
-            cout << "链接关闭" << endl;
-            sock_.close();
-            islogout = true;
-        }
-        else {
-            on_write_reback(reback::writeerror);
-        }
+        errorhandle(er);
         //出错将消息重新置为初始态压入队列
         changestatus(p, 0);
         {
             lock_guard<mutex>relock(clch->remu);
             clch->remessage.push(p);
         }
-        cout << "on_write error";
         return;
     }
+    static int count = 0;
+    std::cout << "write one message" << count++ << endl;
     //将消息状态置为可丢弃压入队列
     this->on_write();
 }
@@ -356,13 +370,16 @@ ERROR_SEM_TIMEOUT    (121)    信号灯超时时间已到。使用完成端口模型作服务器，当Ge
 
 ERROR_CONNECTION_ABORTED   (1236)   由本地系统终止网络连接。使用完成端口模型作服务器，当GetQueuedCompletionStatus的时候,会出现此错误。*/
 int clint::errorhandle(boost::system::error_code& er) {
-    if (isdiascard) {//有其他异步任务已经检测出该对线被丢弃了
+    if (isdiascard) {//有其他异步任务已经检测出该对象被丢弃了
         return 1;
     }
-
+    std::cout << er.what() << endl;
     if (er != boost::asio::error::operation_aborted)//本端未关闭套接字
     {
+        sock_.close();
         isdiascard = true;
+        islogout = true;
+        std::cout << this->id << "logout" << endl;
         return 0; //retruen 0调用close关闭本端套接字释放资源
     }
     return 1;  //一般错误
@@ -372,15 +389,14 @@ ip::tcp::socket& clint::sock() {
     return sock_;
 }
 void clint::ls_file(string &s) {
+
 #ifdef UNIX
     struct dirent* ent = NULL;
     DIR* pDir;
 
-    if ((pDir = opendir("./FileRecv")) == NULL)
+    if ((pDir = opendir(filePath)) == NULL)
     {
-        //printf("open dir %s failed\n", pszBaseDir);
-        contentbuf += "open dir %s failed\n";
-        do_FileRecv_write();
+        printf("open dir %s failed\n",filePath);
         return;
     }
     try {
@@ -390,15 +406,19 @@ void clint::ls_file(string &s) {
             if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
                 continue;
             }
-            contentbuf += ent->d_name;
-            contentbuf.append(" ");
+            string tmp(ent->d_name);
+            if (tmp.find(s) != string::npos) {
+                cout << "find:" << tmp << endl;
+                s = tmp;
+                break;
+            }
         }
     }
     catch (std::exception e) {
         cout << __LINE__ << e.what() << endl;
-        connection_manager_.stop(shared_from_this());
+        //connection_manager_.stop(shared_from_this());
     }
-    do_FileRecv_write();
+    //do_FileRecv_write();
     closedir(pDir);
 #endif // UNIX 
 #ifdef WIN
@@ -408,14 +428,11 @@ void clint::ls_file(string &s) {
         struct _finddata_t fileinfo;
         handle = _findfirst(filePath, &fileinfo);
         cout <<"filePath:" << filePath << endl;
-        //cout << "find:" << s <<"s.size():"<<s.size() << endl;
         do
         {
             //找到的文件的文件名
             if ((!strcmp(fileinfo.name, ".")) || !strcmp(fileinfo.name, ".."))continue;
-            string tmp(fileinfo.name);
-            cout <<"tmp:" << tmp << endl;
-            
+            string tmp(fileinfo.name);     
             if(tmp.find(s)!=string::npos){
                 cout <<"find:" << tmp << endl;
                 s = tmp;
