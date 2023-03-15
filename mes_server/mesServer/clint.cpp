@@ -47,6 +47,7 @@ void clint::on_read_content(Head he) {
                         lock_guard<mutex> selock(clch->semu);
 
                         clch->semessage.push(buf);
+                        on_write_reback(reback::sendSucc);//发送成功通知
                         is_have_task = true;
                         semu_cond.notify_all();//唤醒处理任务的线程
                     }
@@ -280,7 +281,7 @@ void clint::on_read_plus() {
         }
     }));
 }
-
+#if 0
 void clint::on_write() {
     if (isdiascard) {
         return;
@@ -290,12 +291,15 @@ void clint::on_write() {
     {
         lock_guard<mutex> relock(clch->remu);
 
-        if (clch->remessage.size() > 0) {
+        if (clch->remessage.size() > 0&& clch->remessage.size()<10000) {//这边想想怎么搞一次性全发********如果这里一下子积压太多消息一条一条发就太慢了
+            //限制一个账户的消息队列//如果短时间超过10000就认为该账户被攻击了//清空接收队列，停止转发后面的消息//也就是一个账户
+
             reme = clch->remessage.front();
             //将消息状态置为已处理
             clch->remessage.pop();
         }
         else {
+            std::queue<std::string>().swap(clch->remessage);//为空释放掉申请的内存************************
             return;//多加一层认证防止各种不确定性
         }
     }
@@ -322,6 +326,55 @@ void clint::clint_handle_write(string p, boost::system::error_code er, size_t sz
     //将消息状态置为可丢弃压入队列
     this->on_write();
 }
+#endif
+
+
+void clint::on_write() {
+    if (isdiascard) {
+        return;
+    }
+    std::queue<std::string> tmpQueue;
+    {
+        lock_guard<mutex> relock(clch->remu);
+        if (!clch->remessage.empty()) {
+            tmpQueue.swap(clch->remessage);
+            std::cout << "cur times tmpQueue size:" << tmpQueue.size() << endl;
+        }
+    }
+
+    std::async(std::launch::async, [this](std::queue<std::string> tmpQueue) {//异步起动让该on_write函数立即返回
+            while (!tmpQueue.empty()) {
+                shared_const_buffer buffer(tmpQueue.front());
+                //async_write(sock_,buffer, bind(&clint::clint_handle_write, this, buffer, _1, _2));
+                async_write(sock_, buffer, bind(&clint::clint_handle_write, this, std::string(tmpQueue.front().begin(), tmpQueue.front().end()), _1, _2));
+                tmpQueue.pop();
+            }   
+        }
+        ,std::move(tmpQueue));
+
+    
+}
+void clint::clint_handle_write(std::string buffer, boost::system::error_code er, size_t sz) {
+    if (isdiascard) {
+        return;
+    }
+    if (er) {
+        //出错将消息重新置为初始态压入队列
+        //string tmp(buffer.begin(), buffer.end());
+        {
+            lock_guard<mutex>relock(clch->remu);
+            clch->remessage.push(buffer);
+        }
+        errorhandle(er);
+        return;
+    }
+    static int count = 0;
+    std::cout << "write one message" << count++ << endl;
+    //将消息状态置为可丢弃压入队列
+    //this->on_write();
+}
+
+
 int clint::headanylize(const Head* head) {
     if (head->type == 'm') {
         return 1;

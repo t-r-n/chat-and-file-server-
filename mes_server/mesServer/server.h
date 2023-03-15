@@ -3,7 +3,9 @@
 #define SERVER_H
 #include "server_config.h"
 #include"clint.h"
+#ifdef COMYSQL
 #include"mysql_pool.h"
+#endif
 //#include"FileServer.h"
 class Server :public std::enable_shared_from_this<Server> {//服务器应该开一个线程池读取客户的消息队列调用相应客户的on_write函数
 public:
@@ -26,7 +28,9 @@ private:
     int curclintid = 0;
     list<shared_ptr<clint>>cl;
     shared_ptr< ilovers::TaskExecutor>executor;
+#ifdef COMYSQL
     unique_ptr< MysqlPool>mysqlPool;
+#endif
     Server(char*path,int port);
     void clint_handle_accept(boost::system::error_code er, shared_ptr<clint>cl1);
     void gc();//垃圾回收
@@ -42,13 +46,16 @@ private:
         //return *(fHead*)std::string(buff.begin(), buff.begin() + sizeofFhead).c_str();
     }
     void initData();
+#ifdef COMYSQL
     void handleSql();
+#endif
     //unordered_map<int, queue<std::string>>handleingque;
     //mutex handle_acc_mutex;
     void translate();
     void tmphandlethread();
     void handlequethread();
     void handle_login_write();
+    void debugClintStatus();
 };
 
 #endif

@@ -28,10 +28,10 @@ unordered_map<int, vector<unsigned int>>talkRoomQueue;
 mutex talkRoomQueue_mutex;
 
 char* filePath;
-
+#ifdef COMYSQL
 queue<std::string>sqlList;
 mutex sqlList_mu;
-
+#endif
 Server::Server(char*path,int port) {
     filePath = path;
 
@@ -64,6 +64,8 @@ Server::Server(char*path,int port) {
     //executor->commit(&Server::handle_login_write, this);
     //executor->commit(&Server::translate, this);
     //executor->commit(std::bind(&Server::gc, this));
+    
+    //executor->commit(std::bind(&Server::debugClintStatus, this));
     executor->commit(std::bind(&Server::translate,this));//转发消息线程
     executor->commit(std::bind(&Server::handle_login_write, this));//在线用户接收消息线程
     executor->commit(std::bind(&Server::gc, this));//退出用户清楚内存线程
@@ -97,6 +99,7 @@ void Server::clint_handle_accept(boost::system::error_code er, shared_ptr<clint>
     }
 }
 void Server::gc() {
+    std::cout << "gc start" << std::endl;
     while (1) {
         this_thread::sleep_for(std::chrono::milliseconds(100));
         unique_lock<mutex>gc_lock(cur_account_ptr_mutex, std::defer_lock);
@@ -126,7 +129,8 @@ void Server::changestatus(std::string& p, unsigned int st) {
     h->status = st;
     p = std::string(ttmphead, sizeof(Head)) + std::string(p.begin() + sizeof(Head), p.end());
 }
-void Server::translate() {
+void Server::translate() {//最后内存聚集到remessage里如果有这个用户
+    std::cout << "translate start" << std::endl;
     static queue<std::string> tmpMesQueue;
     static Head h;
     while (1) {
@@ -138,6 +142,9 @@ void Server::translate() {
                     if (a.second->semessage.size() > 0) {
                         tmpMesQueue.push( a.second->semessage.front() );
                         a.second->semessage.pop();
+                    }
+                    else if(a.second->semessage.size()==0){//释放发送队列内存
+                        std::queue<std::string>().swap(a.second->semessage);
                     }
                     semu_lock.unlock();
                 }
@@ -153,7 +160,7 @@ void Server::translate() {
                     unique_lock<mutex>remu_lock(account[h.sendto]->remu,std::defer_lock);
                     if (remu_lock.try_lock()) {
                         account[h.sendto]->remessage.push(s);
-                        std::cout << "push remu:" << s << endl;
+                        //std::cout << "push remu:" << s << endl;
                     }
                     else {//没拿到锁，放回消息队列
                         tmpMesQueue.push(s);
@@ -169,8 +176,27 @@ void Server::translate() {
     }
     cout << "translate end" << endl;
 }
-
+void Server::debugClintStatus() {
+    std::cout << "debugClintStatus start" << std::endl;
+    while (1) {
+        lock_guard<mutex>acc_mutex_lock(acc_mutex);
+        for (auto& a : account) {
+            unique_lock<mutex>semu_lock(a.second->semu, std::defer_lock);
+            if (semu_lock.try_lock()) {
+                std::cout << "acc:" << a.first << "seme size:"<<a.second->semessage.size() << std::endl;
+                semu_lock.unlock();
+            }
+            unique_lock<mutex>remu_lock(a.second->remu, std::defer_lock);
+            if (remu_lock.try_lock()) {
+                std::cout << "acc:" << a.first << "reme size:" << a.second->remessage.size() << std::endl;
+                remu_lock.unlock();
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    }
+}
 void Server::handle_login_write() {//在线就把东西发过去
+    std::cout << "handle login write start" << std::endl;
     while (1) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));//睡眠10毫秒
         unique_lock<mutex>ll(cur_account_ptr_mutex, std::defer_lock);
@@ -190,7 +216,7 @@ void Server::handle_login_write() {//在线就把东西发过去
         }
     }
 }
-
+#ifdef COMYSQL
 void Server::initData() {
     std::map<const std::string, std::vector<const char*> > m = mysqlPool->executeSql("select * from account");
     for (auto& a : m) {
@@ -277,6 +303,7 @@ void Server::initData() {
     }
 
 }
+
 void Server::handleSql() {
     while (1) {
         unique_lock<mutex>sql_lock(sqlList_mu, std::defer_lock);
@@ -289,3 +316,4 @@ void Server::handleSql() {
         }
     }
 }
+#endif

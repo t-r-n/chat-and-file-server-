@@ -4,7 +4,7 @@
 //#define DEBUG
 //#define LOCK_DEBUG
 //#define LINUX
-#define COMYSQL
+//#define COMYSQL
 #define WIN
 
 #include <iostream>
@@ -30,6 +30,8 @@
 #include"thread_pool.h"     
 #include<fstream>
 #include<boost/asio/strand.hpp>
+#include<list>
+#include<future>
 
 using namespace std;
 using namespace boost::asio;
@@ -46,7 +48,8 @@ using namespace boost::asio;
         fitrfail = 11,  //文件传输失败
         fitrbusy = 12,    //文件空闲服务队列已满
         firetrst = 13,
-        BuildTalkRoomSuc=14
+        sendSucc=15,
+        BuildTalkRoomSuc=16
     };
     extern  bool is_have_task;
     extern  mutex my_mutex;
@@ -116,10 +119,10 @@ extern    unordered_map<int, bool>islogin;//在线用户指针速查
 extern unordered_map<int, queue<std::string>>handleingque;
 extern mutex handle_acc_mutex;
     //extern shared_ptr<Server>Se_ptr;
-
+#ifdef COMYSQL
 extern queue<std::string>sqlList;
 extern mutex sqlList_mu;
-
+#endif
 
 
 //聊天室

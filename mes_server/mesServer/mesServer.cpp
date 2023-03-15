@@ -1,6 +1,6 @@
 ﻿#include <iostream>
 #include "server.h"
-#include"mysql_pool.h"
+//#include"mysql_pool.h"
 
 int main(int argc,char**argv)
 {

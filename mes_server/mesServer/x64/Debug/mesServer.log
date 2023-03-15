@@ -4,7 +4,8 @@
   - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
   Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
 E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
-E:\trn_project\fin_server\mes_server\mesServer\clint.cpp(69,1): warning C4267: “=”: 从“size_t”转换到“unsigned int”，可能丢失数据
+E:\trn_project\fin_server\mes_server\mesServer\clint.cpp(70,1): warning C4267: “=”: 从“size_t”转换到“unsigned int”，可能丢失数据
+E:\trn_project\fin_server\mes_server\mesServer\clint.cpp(345,10): warning C4834: 放弃具有 "nodiscard" 属性的函数的返回值
   mesServer.cpp
   Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately. For example:
   - add -D_WIN32_WINNT=0x0601 to the compiler command line; or
@@ -17,7 +18,6 @@ E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of decla
   - add _WIN32_WINNT=0x0601 to your project's Preprocessor Definitions.
   Assuming _WIN32_WINNT=0x0601 (i.e. Windows 7 target).
 E:\boost_1_79_0\boost_1_79_0\boost\bind.hpp(41): message : The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
-E:\trn_project\fin_server\mes_server\mesServer\server.cpp(147,42): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-E:\trn_project\fin_server\mes_server\mesServer\server.cpp(235,28): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+E:\trn_project\fin_server\mes_server\mesServer\server.cpp(154,42): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
   正在生成代码...
   mesServer.vcxproj -> E:\trn_project\fin_server\mes_server\mesServer\x64\Debug\mesServer.exe
